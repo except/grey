@@ -3,11 +3,22 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 52;
 	objects = {
 
 /* Begin PBXBuildFile section */
+		9F6F0BA923A698E7005F9D2D /* Task.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F6F0BA823A698E7005F9D2D /* Task.swift */; };
+		9F6F0BAB23A69ABA005F9D2D /* Variti.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F6F0BAA23A69ABA005F9D2D /* Variti.swift */; };
+		9F6F0BAD23A69AFF005F9D2D /* Proxy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F6F0BAC23A69AFF005F9D2D /* Proxy.swift */; };
+		9F6F0BAF23A69CF7005F9D2D /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F6F0BAE23A69CF7005F9D2D /* Logger.swift */; };
+		9F6F0BB223A69E8C005F9D2D /* Rainbow in Frameworks */ = {isa = PBXBuildFile; productRef = 9F6F0BB123A69E8C005F9D2D /* Rainbow */; };
+		9F6F0BB523A6E986005F9D2D /* Kitura in Frameworks */ = {isa = PBXBuildFile; productRef = 9F6F0BB423A6E986005F9D2D /* Kitura */; };
+		9F6F0BB823A6E9BB005F9D2D /* HeliumLogger in Frameworks */ = {isa = PBXBuildFile; productRef = 9F6F0BB723A6E9BB005F9D2D /* HeliumLogger */; };
+		9F6F0BBB23A6EA28005F9D2D /* Kitura-WebSocket in Frameworks */ = {isa = PBXBuildFile; productRef = 9F6F0BBA23A6EA28005F9D2D /* Kitura-WebSocket */; };
+		9F6F0BBD23A6EA5A005F9D2D /* TaskService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F6F0BBC23A6EA5A005F9D2D /* TaskService.swift */; };
 		9F990B8A23A5C9B8001DA13E /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F990B8923A5C9B8001DA13E /* main.swift */; };
+		9FA78AFE23A88CAD007C7F8C /* SwiftSoup in Frameworks */ = {isa = PBXBuildFile; productRef = 9FA78AFD23A88CAD007C7F8C /* SwiftSoup */; };
+		9FDEFCC623A7B453003DB5A1 /* Riskified.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FDEFCC523A7B453003DB5A1 /* Riskified.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -23,8 +34,14 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		9F6F0BA823A698E7005F9D2D /* Task.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Task.swift; sourceTree = "<group>"; };
+		9F6F0BAA23A69ABA005F9D2D /* Variti.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Variti.swift; sourceTree = "<group>"; };
+		9F6F0BAC23A69AFF005F9D2D /* Proxy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Proxy.swift; sourceTree = "<group>"; };
+		9F6F0BAE23A69CF7005F9D2D /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
+		9F6F0BBC23A6EA5A005F9D2D /* TaskService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskService.swift; sourceTree = "<group>"; };
 		9F990B8623A5C9B8001DA13E /* grey */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = grey; sourceTree = BUILT_PRODUCTS_DIR; };
 		9F990B8923A5C9B8001DA13E /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		9FDEFCC523A7B453003DB5A1 /* Riskified.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Riskified.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -32,6 +49,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9F6F0BBB23A6EA28005F9D2D /* Kitura-WebSocket in Frameworks */,
+				9F6F0BB523A6E986005F9D2D /* Kitura in Frameworks */,
+				9F6F0BB823A6E9BB005F9D2D /* HeliumLogger in Frameworks */,
+				9F6F0BB223A69E8C005F9D2D /* Rainbow in Frameworks */,
+				9FA78AFE23A88CAD007C7F8C /* SwiftSoup in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -58,6 +80,12 @@
 			isa = PBXGroup;
 			children = (
 				9F990B8923A5C9B8001DA13E /* main.swift */,
+				9F6F0BA823A698E7005F9D2D /* Task.swift */,
+				9F6F0BAA23A69ABA005F9D2D /* Variti.swift */,
+				9F6F0BAC23A69AFF005F9D2D /* Proxy.swift */,
+				9F6F0BAE23A69CF7005F9D2D /* Logger.swift */,
+				9F6F0BBC23A6EA5A005F9D2D /* TaskService.swift */,
+				9FDEFCC523A7B453003DB5A1 /* Riskified.swift */,
 			);
 			path = grey;
 			sourceTree = "<group>";
@@ -78,6 +106,13 @@
 			dependencies = (
 			);
 			name = grey;
+			packageProductDependencies = (
+				9F6F0BB123A69E8C005F9D2D /* Rainbow */,
+				9F6F0BB423A6E986005F9D2D /* Kitura */,
+				9F6F0BB723A6E9BB005F9D2D /* HeliumLogger */,
+				9F6F0BBA23A6EA28005F9D2D /* Kitura-WebSocket */,
+				9FA78AFD23A88CAD007C7F8C /* SwiftSoup */,
+			);
 			productName = grey;
 			productReference = 9F990B8623A5C9B8001DA13E /* grey */;
 			productType = "com.apple.product-type.tool";
@@ -106,6 +141,13 @@
 				Base,
 			);
 			mainGroup = 9F990B7D23A5C9B8001DA13E;
+			packageReferences = (
+				9F6F0BB023A69E8C005F9D2D /* XCRemoteSwiftPackageReference "Rainbow" */,
+				9F6F0BB323A6E986005F9D2D /* XCRemoteSwiftPackageReference "Kitura" */,
+				9F6F0BB623A6E9BB005F9D2D /* XCRemoteSwiftPackageReference "HeliumLogger" */,
+				9F6F0BB923A6EA28005F9D2D /* XCRemoteSwiftPackageReference "Kitura-WebSocket" */,
+				9FA78AFC23A88CAD007C7F8C /* XCRemoteSwiftPackageReference "SwiftSoup" */,
+			);
 			productRefGroup = 9F990B8723A5C9B8001DA13E /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -120,6 +162,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9F6F0BAF23A69CF7005F9D2D /* Logger.swift in Sources */,
+				9F6F0BAD23A69AFF005F9D2D /* Proxy.swift in Sources */,
+				9F6F0BBD23A6EA5A005F9D2D /* TaskService.swift in Sources */,
+				9F6F0BAB23A69ABA005F9D2D /* Variti.swift in Sources */,
+				9FDEFCC623A7B453003DB5A1 /* Riskified.swift in Sources */,
+				9F6F0BA923A698E7005F9D2D /* Task.swift in Sources */,
 				9F990B8A23A5C9B8001DA13E /* main.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -280,6 +328,77 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		9F6F0BB023A69E8C005F9D2D /* XCRemoteSwiftPackageReference "Rainbow" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/onevcat/Rainbow";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.1.5;
+			};
+		};
+		9F6F0BB323A6E986005F9D2D /* XCRemoteSwiftPackageReference "Kitura" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/IBM-Swift/Kitura";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.9.1;
+			};
+		};
+		9F6F0BB623A6E9BB005F9D2D /* XCRemoteSwiftPackageReference "HeliumLogger" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/IBM-Swift/HeliumLogger";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.9.0;
+			};
+		};
+		9F6F0BB923A6EA28005F9D2D /* XCRemoteSwiftPackageReference "Kitura-WebSocket" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/IBM-Swift/Kitura-WebSocket";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.1.2;
+			};
+		};
+		9FA78AFC23A88CAD007C7F8C /* XCRemoteSwiftPackageReference "SwiftSoup" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/scinfu/SwiftSoup";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.2.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		9F6F0BB123A69E8C005F9D2D /* Rainbow */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9F6F0BB023A69E8C005F9D2D /* XCRemoteSwiftPackageReference "Rainbow" */;
+			productName = Rainbow;
+		};
+		9F6F0BB423A6E986005F9D2D /* Kitura */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9F6F0BB323A6E986005F9D2D /* XCRemoteSwiftPackageReference "Kitura" */;
+			productName = Kitura;
+		};
+		9F6F0BB723A6E9BB005F9D2D /* HeliumLogger */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9F6F0BB623A6E9BB005F9D2D /* XCRemoteSwiftPackageReference "HeliumLogger" */;
+			productName = HeliumLogger;
+		};
+		9F6F0BBA23A6EA28005F9D2D /* Kitura-WebSocket */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9F6F0BB923A6EA28005F9D2D /* XCRemoteSwiftPackageReference "Kitura-WebSocket" */;
+			productName = "Kitura-WebSocket";
+		};
+		9FA78AFD23A88CAD007C7F8C /* SwiftSoup */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9FA78AFC23A88CAD007C7F8C /* XCRemoteSwiftPackageReference "SwiftSoup" */;
+			productName = SwiftSoup;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 9F990B7E23A5C9B8001DA13E /* Project object */;
 }
