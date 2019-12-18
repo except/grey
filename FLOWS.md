@@ -1,0 +1,11 @@
+# API Flow
+- Prequisites
+- - Login
+- - Get CSRF
+- - Clear Cart?
+- - Get Order ID **?** ATC Invalid Item -> Get Order ID
+- Task Start
+- - ATC
+- - Match Order ID **?** Get Order ID
+- - Advance Order **?** Retry <-
+- - Load WKWebView -> Complete CC **||** Obtain Sella URL PP Express -> Post Webhook
