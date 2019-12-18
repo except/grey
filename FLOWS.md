@@ -5,7 +5,8 @@
 - - Clear Cart? -> Check Cart?
 - - Get Order ID **?** ATC Invalid Item -> Get Order ID
 - Task Start
-- - ATC
+- - Get Variants - Product? -> Scrape Page **||** Variant -> Websocket
+- - ATC **?** Retry <-
 - - Match Order ID **?** Get Order ID
-- - Advance Order **?** Retry <-
+- - Advance Order  **?** Retry <-
 - - Load WKWebView -> Complete CC **||** Obtain Sella URL PP Express -> Post Webhook
