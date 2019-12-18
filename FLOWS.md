@@ -2,7 +2,7 @@
 - Prequisites
 - - Login
 - - Get CSRF
-- - Clear Cart?
+- - Clear Cart? -> Check Cart?
 - - Get Order ID **?** ATC Invalid Item -> Get Order ID
 - Task Start
 - - ATC
