@@ -17,32 +17,32 @@ struct LogConstants {
 
 class Logger {
     let label: String?
-    
+
     let dateFormatter = ISO8601DateFormatter()
-    
+
     init(label: String? = nil) {
         dateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        
+
         self.label = label
     }
-    
+
     func info(message: String) {
         var messageLabel = "\(dateFormatter.string(from: Date()))"
-        
+
         if let label = self.label {
             messageLabel = "\(messageLabel) \(label):"
         }
-        
+
         print("\(messageLabel) \(LogConstants.Info) \(message)")
     }
-    
+
     func warn(message: String) {
         var messageLabel = "\(dateFormatter.string(from: Date()))"
-        
+
         if let label = self.label {
             messageLabel = "\(messageLabel) \(label):"
         }
-        
+
         print("\(messageLabel) \(LogConstants.Warn) \(message)")
     }
 }

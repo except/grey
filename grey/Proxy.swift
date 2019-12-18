@@ -53,9 +53,8 @@ class Proxy: CustomStringConvertible {
 
         return sessionConfiguration!
     }
-    
+
     var description: String {
-        return "http://\(self.host):\(self.port)"
+        return "http://\(host):\(port)"
     }
 }
-

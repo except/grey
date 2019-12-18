@@ -22,7 +22,7 @@ extension String {
 func solveVariti(response: String) -> [HTTPCookie] {
     let privateKeyString = response.components(separatedBy: "decrypt.setPrivateKey(\"")[1].components(separatedBy: "\");")[0]
     let encryptedText = response.components(separatedBy: "decrypt.decrypt(\"")[1].components(separatedBy: "\");")[0]
-    
+
     guard let keyData = Data(base64Encoded: privateKeyString),
         let encryptedData = Data(base64Encoded: encryptedText),
         let privateKey = SecKeyCreateWithData(keyData as NSData, [
@@ -34,15 +34,14 @@ func solveVariti(response: String) -> [HTTPCookie] {
         return []
     }
 
-    
     let valueIPP_UID = response.components(separatedBy: "document.cookie=\"ipp_uid=")[1].components(separatedBy: ";")[0]
     let valueIPP_UID1 = response.components(separatedBy: "document.cookie=\"ipp_uid1=")[1].components(separatedBy: ";")[0]
     let valueIPP_UID2 = response.components(separatedBy: "document.cookie=\"ipp_uid2=")[1].components(separatedBy: ";")[0]
     let valueSalt = response.components(separatedBy: "salt=\"")[1].components(separatedBy: "\"")[0]
     let deviceFingerprint = UUID().uuidString.replacingOccurrences(of: "-", with: "").lowercased()
-    
+
     var cookieDictionary: [String: String] = [:]
-    
+
     cookieDictionary["ipp_key"] = valueIPP_Key
     cookieDictionary["ipp_uid"] = valueIPP_UID
     cookieDictionary["ipp_uid1"] = valueIPP_UID1
@@ -52,7 +51,7 @@ func solveVariti(response: String) -> [HTTPCookie] {
     let ExpTime = TimeInterval(60 * 60 * 24 * 365)
 
     var cookieArray: [HTTPCookie] = []
-    
+
     for (cookieName, cookieValue) in cookieDictionary {
         let cookieProperties: [HTTPCookiePropertyKey: Any] = [
             HTTPCookiePropertyKey.domain: "www.off---white.com",
@@ -67,6 +66,6 @@ func solveVariti(response: String) -> [HTTPCookie] {
         }
         cookieArray.append(cookie)
     }
-    
+
     return cookieArray
 }

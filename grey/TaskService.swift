@@ -27,13 +27,9 @@ struct Message: Codable {
     var taskIdentifier: String?
 }
 
-struct MessageTaskCreate: Codable {
-    
-}
+struct MessageTaskCreate: Codable {}
 
-struct MessageTaskUpdate: Codable {
-    
-}
+struct MessageTaskUpdate: Codable {}
 
 enum ResponseType: Int, Codable {
     case ActionSuccess = 200
@@ -56,7 +52,7 @@ struct TaskInformationMessage: Codable {
     var taskIdentifier: String
 }
 
-var clientConnection: WebSocketConnection? = nil
+var clientConnection: WebSocketConnection?
 
 class TaskService: WebSocketService {
     let connectionTimeout: Int? = 5
@@ -70,7 +66,7 @@ class TaskService: WebSocketService {
         }
     }
 
-    public func disconnected(connection: WebSocketConnection, reason: WebSocketCloseReasonCode) {
+    public func disconnected(connection _: WebSocketConnection, reason _: WebSocketCloseReasonCode) {
         clientConnection = nil
     }
 
@@ -78,22 +74,22 @@ class TaskService: WebSocketService {
         do {
             let messages: [Message] = try JSONDecoder().decode([Message].self, from: message)
             var response: [Response] = []
-            for (message) in messages {
-                response.append(self.processMessage(message: message))
+            for message in messages {
+                response.append(processMessage(message: message))
             }
-            
+
         } catch {
             // Update Message
             from.send(message: "Invalid Message Payload")
         }
     }
 
-    public func received(message: String, from: WebSocketConnection) {
+    public func received(message _: String, from: WebSocketConnection) {
         // Update Message
         from.send(message: "Invalid Message, should not be String")
     }
-    
-    func processMessage(message: Message) -> Response {
+
+    func processMessage(message _: Message) -> Response {
         return Response(responseCode: ResponseType.ActionSuccess, taskIdentifier: "Test")
     }
 }

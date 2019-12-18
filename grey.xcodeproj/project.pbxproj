@@ -18,7 +18,6 @@
 		9F6F0BBD23A6EA5A005F9D2D /* TaskService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F6F0BBC23A6EA5A005F9D2D /* TaskService.swift */; };
 		9F990B8A23A5C9B8001DA13E /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F990B8923A5C9B8001DA13E /* main.swift */; };
 		9FA78AFE23A88CAD007C7F8C /* SwiftSoup in Frameworks */ = {isa = PBXBuildFile; productRef = 9FA78AFD23A88CAD007C7F8C /* SwiftSoup */; };
-		9FDEFCC623A7B453003DB5A1 /* Riskified.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FDEFCC523A7B453003DB5A1 /* Riskified.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -41,7 +40,6 @@
 		9F6F0BBC23A6EA5A005F9D2D /* TaskService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskService.swift; sourceTree = "<group>"; };
 		9F990B8623A5C9B8001DA13E /* grey */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = grey; sourceTree = BUILT_PRODUCTS_DIR; };
 		9F990B8923A5C9B8001DA13E /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
-		9FDEFCC523A7B453003DB5A1 /* Riskified.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Riskified.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -85,7 +83,6 @@
 				9F6F0BAC23A69AFF005F9D2D /* Proxy.swift */,
 				9F6F0BAE23A69CF7005F9D2D /* Logger.swift */,
 				9F6F0BBC23A6EA5A005F9D2D /* TaskService.swift */,
-				9FDEFCC523A7B453003DB5A1 /* Riskified.swift */,
 			);
 			path = grey;
 			sourceTree = "<group>";
@@ -166,7 +163,6 @@
 				9F6F0BAD23A69AFF005F9D2D /* Proxy.swift in Sources */,
 				9F6F0BBD23A6EA5A005F9D2D /* TaskService.swift in Sources */,
 				9F6F0BAB23A69ABA005F9D2D /* Variti.swift in Sources */,
-				9FDEFCC623A7B453003DB5A1 /* Riskified.swift in Sources */,
 				9F6F0BA923A698E7005F9D2D /* Task.swift in Sources */,
 				9F990B8A23A5C9B8001DA13E /* main.swift in Sources */,
 			);

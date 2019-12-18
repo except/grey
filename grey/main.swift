@@ -16,16 +16,14 @@ import LoggerAPI
 
 var Tasks: [String: Task] = [:]
 
-let task = Task(taskObj: TaskObj(taskMode: TaskMode.API, taskType: TaskType.Product, accountEmail: "hasan@loserspay.tax", accountPassword: "TrelloUnique12"))
-print(task.login())
-print(task.addToCart(variantID: 115604))
+testFunc()
 
 HeliumLogger.use(.info)
 
 WebSocket.register(service: TaskService(), onPath: "task")
 
 class TaskServerDelegate: ServerDelegate {
-    public func handle(request: ServerRequest, response: ServerResponse) {}
+    public func handle(request _: ServerRequest, response _: ServerResponse) {}
 }
 
 let server = HTTP.createServer()
