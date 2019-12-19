@@ -13,12 +13,15 @@ import KituraWebSocket
 
 import HeliumLogger
 import LoggerAPI
+import WebKit
 
 var Tasks: [String: Task] = [:]
 
-testFunc()
+Log.info("Starting")
 
 HeliumLogger.use(.info)
+
+testFunc()
 
 WebSocket.register(service: TaskService(), onPath: "task")
 

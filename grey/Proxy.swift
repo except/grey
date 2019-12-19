@@ -50,7 +50,7 @@ class Proxy: CustomStringConvertible {
                 sessionConfiguration!.httpAdditionalHeaders = ["User-Agent": UserAgent, "Proxy-Authorization": self.authorisation!]
             }
         }
-
+        
         return sessionConfiguration!
     }
 
