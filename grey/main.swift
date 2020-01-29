@@ -13,7 +13,6 @@ import KituraWebSocket
 
 import HeliumLogger
 import LoggerAPI
-import WebKit
 
 let concurrentTaskQueue = DispatchQueue(label: "TaskQueue", attributes: .concurrent)
 let concurrentWHQueue = DispatchQueue(label: "WHQueue", attributes: .concurrent)
