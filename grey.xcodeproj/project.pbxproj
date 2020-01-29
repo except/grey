@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		9F1C993C23AA9F120030FE58 /* Client.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F1C993B23AA9F120030FE58 /* Client.swift */; };
-		9F39528F23AC505800368EB8 /* AccountCreator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F39528E23AC505800368EB8 /* AccountCreator.swift */; };
 		9F39529123AC8B8F00368EB8 /* Webhook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F39529023AC8B8F00368EB8 /* Webhook.swift */; };
 		9F6F0BA923A698E7005F9D2D /* Task.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F6F0BA823A698E7005F9D2D /* Task.swift */; };
 		9F6F0BAB23A69ABA005F9D2D /* Variti.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F6F0BAA23A69ABA005F9D2D /* Variti.swift */; };
@@ -37,7 +36,6 @@
 
 /* Begin PBXFileReference section */
 		9F1C993B23AA9F120030FE58 /* Client.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Client.swift; sourceTree = "<group>"; };
-		9F39528E23AC505800368EB8 /* AccountCreator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountCreator.swift; sourceTree = "<group>"; };
 		9F39529023AC8B8F00368EB8 /* Webhook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Webhook.swift; sourceTree = "<group>"; };
 		9F6F0BA823A698E7005F9D2D /* Task.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Task.swift; sourceTree = "<group>"; };
 		9F6F0BAA23A69ABA005F9D2D /* Variti.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Variti.swift; sourceTree = "<group>"; };
@@ -91,7 +89,6 @@
 				9F6F0BAC23A69AFF005F9D2D /* Proxy.swift */,
 				9F6F0BAE23A69CF7005F9D2D /* Logger.swift */,
 				9F6F0BBC23A6EA5A005F9D2D /* TaskService.swift */,
-				9F39528E23AC505800368EB8 /* AccountCreator.swift */,
 			);
 			path = grey;
 			sourceTree = "<group>";
@@ -172,7 +169,6 @@
 				9F6F0BAD23A69AFF005F9D2D /* Proxy.swift in Sources */,
 				9F1C993C23AA9F120030FE58 /* Client.swift in Sources */,
 				9F6F0BBD23A6EA5A005F9D2D /* TaskService.swift in Sources */,
-				9F39528F23AC505800368EB8 /* AccountCreator.swift in Sources */,
 				9F6F0BAB23A69ABA005F9D2D /* Variti.swift in Sources */,
 				9F39529123AC8B8F00368EB8 /* Webhook.swift in Sources */,
 				9F6F0BA923A698E7005F9D2D /* Task.swift in Sources */,
