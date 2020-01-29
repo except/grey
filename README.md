@@ -10,7 +10,7 @@ Preface, I suck at Swift so it might not be the best solution, and some of the s
 - Task Handling
 - - WS API (Incomplete) makes managing tasks simple however there is a limit of 64 tasks due to how DispatchQueue's work.
 - Speed
-- - The use of the Spree API also referred to as :zap: **Lightning mode** on [TheMobileBot](https://twitter.com/TheMobileBot/) gave us great speed advantage theoretically bringing our request count down after completely some initiating steps to just  `ATC -> Advance Order -> Start PayPal Checkout || Start Card Checkout (Not Implemented)`
+- - The use of the Spree API (also referred to as :zap: **Lightning mode** on [TheMobileBot](https://twitter.com/TheMobileBot/)) gave us great speed advantage theoretically bringing our request count down after completely some initiating steps to just  `ATC -> Advance Order -> Start PayPal Checkout || Start Card Checkout (Not Implemented)`
 
 # Status
 
