@@ -900,8 +900,6 @@ class Task {
             case 403:
                 advanceError = .TaskBanned
             case 422:
-                let responseString = String(data: data, encoding: .utf8)
-                print(responseString)
                 advanceError = .InvalidAPIResponse
             default:
                 advanceError = .InvalidStatusCode
