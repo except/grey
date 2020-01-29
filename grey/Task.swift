@@ -16,7 +16,7 @@ var MaxSetupAttempts = 5
 var MaxLinkAttempts = 20
 var RetryDelay = 500
 var MonitorDelay = 250
-var WebhookURL = "https://hooks.slack.com/services/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"
+var WebhookURL = ""
 let GlobalWH = Webhook(url: URL(string: WebhookURL)!)
 
 var ProductMonitorDict = Dictionary<String,String>()
