@@ -34,6 +34,15 @@ func solveVariti(response: String) -> [HTTPCookie] {
         return []
     }
 
+    let uidComp = response.components(separatedBy: "document.cookie=\"ipp_uid=")
+    let uid1Comp = response.components(separatedBy: "document.cookie=\"ipp_uid1=")
+    let uid2Comp = response.components(separatedBy: "document.cookie=\"ipp_uid2=")
+    let saltComp = response.components(separatedBy: "salt=\"")
+    
+    if uidComp.count <= 0 && uid1Comp.count <= 0 && uid2Comp.count <= 0 && saltComp.count <= 0 {
+        return []
+    }
+    
     let valueIPP_UID = response.components(separatedBy: "document.cookie=\"ipp_uid=")[1].components(separatedBy: ";")[0]
     let valueIPP_UID1 = response.components(separatedBy: "document.cookie=\"ipp_uid1=")[1].components(separatedBy: ";")[0]
     let valueIPP_UID2 = response.components(separatedBy: "document.cookie=\"ipp_uid2=")[1].components(separatedBy: ";")[0]

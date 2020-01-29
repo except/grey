@@ -108,23 +108,23 @@ class Session: NSObject, URLSessionTaskDelegate {
             }
             
             if let serverName = response.allHeaderFields["Server"] as? String {
-                if serverName.contains("Variti") {
-                    self.logger.warn(message: "Detected Challenge - \(serverName)")
-                    let responseHTML = String(data: data, encoding: .utf8)!
+                if serverName.contains("Variti") && response.statusCode == 200 {
+                    if data.count > 0, let responseHTML = String(data: data, encoding: .utf8) {
+                        self.logger.warn(message: "Detected Challenge - \(serverName)")
+                        let cookieArray = solveVariti(response: responseHTML)
+                        if cookieArray.count > 0 {
+                           for cookie in cookieArray {
+                               self.session.configuration.httpCookieStorage?.setCookie(cookie)
+                           }
 
-                    let cookieArray = solveVariti(response: responseHTML)
-
-                    if cookieArray.count > 0 {
-                        for cookie in cookieArray {
-                            self.session.configuration.httpCookieStorage?.setCookie(cookie)
+                           self.logger.info(message: "Solved Attempted - \(serverName)")
+                        } else {
+                           self.logger.info(message: "Solve Failed - \(serverName)")
                         }
-
-                        self.logger.info(message: "Solved Attempted - \(serverName)")
-                    } else {
-                        self.logger.info(message: "Solve Failed - \(serverName)")
+                        
+                        usleep(250_000)
+                        return self.doRequest(request: request, completionHandler: completionHandler)
                     }
-
-                    return self.doRequest(request: request, completionHandler: completionHandler)
                 }
             }
 

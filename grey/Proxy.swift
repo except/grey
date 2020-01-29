@@ -20,7 +20,7 @@ class Proxy: CustomStringConvertible {
     var host: String
     var port: Int
     var authorisation: String?
-    init(host: String, port: Int, username: String?, password: String?) {
+    init(host: String, port: Int, username: String? = nil, password: String? = nil) {
         self.host = host
         self.port = port
 

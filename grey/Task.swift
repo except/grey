@@ -11,17 +11,29 @@ import Foundation
 import WebKit
 import SwiftSoup
 
-let UserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 13_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.4 Mobile/15E148 Safari/604.1"
-let MaxSetupAttempts = 5
+var UserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 13_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.4 Mobile/15E148 Safari/604.1"
+var MaxSetupAttempts = 5
+var MaxLinkAttempts = 20
+var RetryDelay = 500
+var MonitorDelay = 250
+var WebhookURL = "https://hooks.slack.com/services/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"
+let GlobalWH = Webhook(url: URL(string: WebhookURL)!)
+
+var ProductMonitorDict = Dictionary<String,String>()
 
 enum TaskMode: Int, Codable {
-    case Safe = 0
+//    case Safe = 0
     case API = 1
 }
 
 enum TaskType: Int, Codable {
     case Product = 0
     case Variant = 1
+}
+
+enum TaskPaymentType: Int, Codable {
+    case Card = 0
+    case PayPal = 1
 }
 
 enum TaskState: Int, Codable {
@@ -45,24 +57,26 @@ enum TaskInternalState: Int, Codable {
     case Idle = 0
     case AttemptingLogin = 1
     case LoggedIn = 2
-    case AttemptingGetCSRF = 3
-    case ObtainedCSRF = 4
-    case AttemptingClearCart = 5
-    case ClearedCart = 6
-    case AttemptingObtainingCart = 7
-    case ObtainedCartObject = 8
-    case AttemptingObtainingCheckout = 9
-    case ObtainedCheckoutObject = 10
-    case AwaitingProduct = 11
-    case ProductFound = 12
-    case AttemptingToCart = 13
-    case ItemCarted = 14
-    case AttemptingCheckoutAdvance = 15
-    case CheckoutAdvanced = 16
-    case AttemptingObtainingPayPalLink = 17
-    case ObtainedPayPalLink = 18
-    case AttemptingCardPayment = 19
-    case CardPaymentSuccess = 20
+    case AttempingGetCountryISO = 3
+    case ObtainedUserCountry = 4
+    case AttemptingGetCSRF = 5
+    case ObtainedCSRF = 6
+    case AttemptingClearCart = 7
+    case ClearedCart = 8
+    case AttemptingObtainingCart = 9
+    case ObtainedCartObject = 10
+    case AttemptingObtainingCheckout = 11
+    case ObtainedCheckoutObject = 12
+    case AwaitingProduct = 13
+    case ProductFound = 14
+    case AttemptingToCart = 15
+    case ItemCarted = 16
+    case AttemptingCheckoutAdvance = 17
+    case CheckoutAdvanced = 18
+    case AttemptingObtainingPayPalLink = 19
+    case ObtainedPayPalLink = 20
+    case AttemptingCardPayment = 21
+    case CardPaymentSuccess = 22
 }
 
 enum TaskError: Error {
@@ -75,8 +89,11 @@ enum TaskError: Error {
     case TaskBanned
     case EncodingError
     case DecodingError
+    case NoBillingAddress
     case ProductOOS
     case ProductDoesNotExist
+    case NoAddress
+    case NoCountry
     case NoCSRF
     case SwiftSoupError
     case CartNotEmpty
@@ -104,15 +121,22 @@ struct TaskErrorState {
 struct TaskObj: Codable {
     var taskMode: TaskMode
     var taskType: TaskType
+    var taskPayment: TaskPaymentType
     var accountEmail: String
     var accountPassword: String
+    var cardObject: CardObj?
     var accountUser: User?
     var billingAddress: Address?
     var shippingAddress: Address?
     var csrfToken: String?
-    var clearedCart: Bool = false
-    var completedSetup = false
     var checkoutObject: CheckoutObject?
+}
+
+struct CardObj: Codable {
+    let cardNumber: String
+    let expiryMonth: String
+    let expiryYear: String
+    let cardCVV: String
 }
 
 struct LoginResponse: Codable {
@@ -181,14 +205,13 @@ struct Cart: Codable {
 struct CartLineItem: Codable {
     let variantID: Int
     let imageURL: String
-    let name, designerName, url: String
+    let name, url: String
     let quantity: Int
 
     enum CodingKeys: String, CodingKey {
         case variantID = "variant_id"
         case imageURL = "image_url"
         case name
-        case designerName = "designer_name"
         case url, quantity
     }
 }
@@ -221,12 +244,14 @@ struct CheckoutObject: Codable {
     let userID: Int
     let currency: String
     let lineItems: [CheckoutLineItem]
+    let payments: [CheckoutPayment]
 
     enum CodingKeys: String, CodingKey {
         case id, number, total, state
         case userID = "user_id"
         case currency
         case lineItems = "line_items"
+        case payments
     }
 }
 
@@ -258,6 +283,32 @@ struct CheckoutVariant: Codable {
     }
 }
 
+struct CheckoutPayment: Codable {
+    let id: Int
+}
+
+struct CountryAPIResponse: Codable {
+    let count, currentPage, pages: Int
+    let countries: [Country]
+
+    enum CodingKeys: String, CodingKey {
+        case count
+        case currentPage = "current_page"
+        case pages, countries
+    }
+}
+
+struct Country: Codable {
+    let id: Int
+    let isoName, iso: String
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case isoName = "iso_name"
+        case iso
+    }
+}
+
 
 struct APIErrorResponse: Codable {
     let error: String
@@ -280,7 +331,14 @@ class Task {
     var taskObj: TaskObj
     var proxyObj: Proxy?
     var isLoggedIn = false
+    var setupComplete = false
+    var isMonitorTask = false
     var taskSetupAttempts = 0
+    var qtUpdate = false
+    var stopCalled = false
+    var variantArray = Set<Int>()
+    var userCountry = "GB"
+    var clearedCart: Bool = false
     
     init(taskObj: TaskObj) {
         self.taskObj = taskObj
@@ -314,7 +372,7 @@ class Task {
                     self.proxyObj = proxy
                     config.httpAdditionalHeaders?["User-Agent"] = UserAgent
                     session = Session(configuration: config, logger: logger)
-                    logger.info(message: "Set Proxy - \(proxy)")
+                    self.logger.info(message: "Set Proxy - \(proxy)")
                     break
                 }
             }
@@ -326,17 +384,14 @@ class Task {
         var loginError: TaskError?
         let semaphore = DispatchSemaphore(value: 0)
 
-        var request = URLRequest(url: URL(string: "https://www.off---white.com/en/GB/user/spree_user/sign_in")!)
+        var request = URLRequest(url: URL(string: "https://www.off---white.com/en/\(self.userCountry)/login")!)
         request.httpMethod = "POST"
         request.setValue("application/javascript", forHTTPHeaderField: "Accept")
-        request.setValue("application/json; charset=UTF-8", forHTTPHeaderField: "Content-Type")
-
-        let loginObj = ["spree_user": ["email": self.taskObj.accountEmail, "password": self.taskObj.accountPassword, "remember_me": 1]]
-        guard let serializedBody = try? JSONSerialization.data(withJSONObject: loginObj, options: .prettyPrinted) else {
-            return (isLoggedIn, .EncodingError)
-        }
-
-        request.httpBody = serializedBody
+        request.setValue(QHTTPFormURLEncoded.contentType, forHTTPHeaderField: "Content-Type")
+        
+        let query = [("utf8", "✓"), ("authenticity_token", ""), ("spree_user[email]", self.taskObj.accountEmail), ("spree_user[password]",  self.taskObj.accountPassword), ("spree_user[remember_me]", "1"), ("commit", "Login")]
+        
+        request.httpBody = QHTTPFormURLEncoded.urlEncoded(formDataSet: query).data(using: .utf8)
 
         self.session.doRequest(request: request) { data, response, error in
             if error != nil {
@@ -375,6 +430,7 @@ class Task {
             case 422:
                 loginError = .InvalidCredentials
             default:
+                self.logger.warn(message: "Invalid Status on Login - \(response.statusCode)")
                 loginError = .InvalidStatusCode
             }
 
@@ -384,13 +440,75 @@ class Task {
         semaphore.wait()
         return (isLoggedIn, loginError)
     }
+    
+    public func getCountryISO(countryID: Int) -> (String?, TaskError?) {
+        var countryISO: String?
+        var getCountryError: TaskError?
+        let semaphore = DispatchSemaphore(value: 0)
+
+        var request = URLRequest(url: URL(string: "https://www.off---white.com/api/countries.json?q[id_eq]=\(countryID)")!)
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+
+        self.session.doRequest(request: request) { data, response, error in
+            if error != nil {
+                getCountryError = .RequestError
+                semaphore.signal()
+                return
+            }
+
+            guard let response = response else {
+                getCountryError = .NilResponse
+                semaphore.signal()
+                return
+            }
+
+            guard let data = data else {
+                getCountryError = .NilResponseData
+                semaphore.signal()
+                return
+            }
+
+            switch response.statusCode {
+            case 200:
+                guard let responseObj = try? JSONDecoder().decode(CountryAPIResponse.self, from: data) else {
+                    getCountryError = .DecodingError
+                    semaphore.signal()
+                    return
+                }
+                
+                if responseObj.count > 0 {
+                    for (country) in responseObj.countries {
+                        if country.id == countryID {
+                            countryISO = country.iso
+                        }
+                    }
+                }
+                
+                if countryISO == nil {
+                    getCountryError = .NoCountry
+                    semaphore.signal()
+                    return
+                }
+
+            case 403:
+                getCountryError = .TaskBanned
+            default:
+                getCountryError = .InvalidStatusCode
+            }
+
+            semaphore.signal()
+        }
+
+        semaphore.wait()
+        return (countryISO, getCountryError)
+    }
 
     public func getCSRF() -> (Bool, TaskError?) {
         var obtainedCSRF = false
         var csrfError: TaskError?
         let semaphore = DispatchSemaphore(value: 0)
 
-        let request = URLRequest(url: URL(string: "https://www.off---white.com/en/GB/cart")!)
+        let request = URLRequest(url: URL(string: "https://www.off---white.com/en/\(self.userCountry)/cart")!)
 
         self.session.doRequest(request: request) { data, response, error in
             if error != nil {
@@ -429,14 +547,11 @@ class Task {
 
                 self.taskObj.csrfToken = csrfToken
                 obtainedCSRF = true
-
-                let variantComponents = html.components(separatedBy: "/frame_remove_item_quantity_from_cart?variant_id=")
-                let variants = variantComponents.count > 1 ? variantComponents.dropFirst().compactMap { Int($0.components(separatedBy: "\"")[0]) } : []
-
-                if variants.count > 0 {
-                    csrfError = .CartNotEmpty
-                } else {
-                    self.taskObj.clearedCart = true
+                
+                if let variantArray = try? doc.select(".decrement").array() {
+                    if variantArray.count > 0 {
+                        csrfError = .CartNotEmpty
+                    }
                 }
             case 403:
                 csrfError = .TaskBanned
@@ -460,7 +575,7 @@ class Task {
             return clearCartError
         }
 
-        var request = URLRequest(url: URL(string: "https://www.off---white.com/en/GB/cart/empty")!)
+        var request = URLRequest(url: URL(string: "https://www.off---white.com/en/\(self.userCountry)/cart/empty")!)
         request.httpMethod = "PUT"
         request.setValue(csrfToken, forHTTPHeaderField: "X-CSRF-Token")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
@@ -499,7 +614,7 @@ class Task {
         var cartError: TaskError?
         let semaphore = DispatchSemaphore(value: 0)
 
-        let request = URLRequest(url: URL(string: "https://www.off---white.com/en/GB/cart.json")!)
+        let request = URLRequest(url: URL(string: "https://www.off---white.com/en/\(self.userCountry)/cart.json")!)
 
         self.session.doRequest(request: request) { data, response, error in
             if error != nil {
@@ -610,10 +725,12 @@ class Task {
                 case 1:
                     checkoutObject = responseObj.orders[0]
                 default:
-                    var currentCheckoutObj = responseObj.orders[0]
+                    var currentCheckoutObj: CheckoutObject?
                     for (order) in responseObj.orders {
-                        if order.id > currentCheckoutObj.id {
-                            currentCheckoutObj = order
+                        if currentCheckoutObj == nil || order.id > currentCheckoutObj!.id {
+                            if order.payments.count < 5 {
+                                currentCheckoutObj = order
+                            }
                         }
                         checkoutObject = currentCheckoutObj
                     }
@@ -670,18 +787,18 @@ class Task {
         var cartingError: TaskError?
         let semaphore = DispatchSemaphore(value: 0)
 
-        var cartObj: [String: AnyHashable] = ["variant_id": variantID, "quantity": 1]
+        var cartObj: [String: Any] = ["variant_id": variantID, "quantity": 1]
 
         if let captchaToken = captchaToken {
             cartObj["g-recaptcha-response"] = captchaToken
         }
 
-        var request = URLRequest(url: URL(string: "https://www.off---white.com/en/GB/orders/populate")!)
+        var request = URLRequest(url: URL(string: "https://www.off---white.com/en/\(self.userCountry)/orders/populate")!)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.setValue("application/json; charset=UTF-8", forHTTPHeaderField: "Content-Type")
 
-        guard let serializedBody = try? JSONSerialization.data(withJSONObject: cartObj, options: .prettyPrinted) else {
+        guard let serializedBody = try? JSONSerialization.data(withJSONObject: cartObj, options: []) else {
             cartingError = .EncodingError
             return (cartingResponse, cartingError)
         }
@@ -740,7 +857,7 @@ class Task {
         var advanceError: TaskError?
         let semaphore = DispatchSemaphore(value: 0)
 
-        var request = URLRequest(url: URL(string: "https://www.off---white.com/api/checkouts/\(orderNumber)/advance")!)
+        var request = URLRequest(url: URL(string: "https://www.off---white.com/api/checkouts/\(orderNumber)/advance.json")!)
 
         guard let APIKey = self.taskObj.accountUser?.spreeAPIKey else {
             advanceError = .NoAPIKey
@@ -779,9 +896,12 @@ class Task {
                 }
 
                 checkoutObj = responseObj
+                self.logger.info(message: "Advanced Order - \(orderNumber) - \(responseObj.state)")
             case 403:
                 advanceError = .TaskBanned
             case 422:
+                let responseString = String(data: data, encoding: .utf8)
+                print(responseString)
                 advanceError = .InvalidAPIResponse
             default:
                 advanceError = .InvalidStatusCode
@@ -813,7 +933,7 @@ class Task {
         
         let updateObj = ["state": orderState.rawValue]
         
-        guard let serializedBody = try? JSONSerialization.data(withJSONObject: updateObj, options: .prettyPrinted) else {
+        guard let serializedBody = try? JSONEncoder().encode(updateObj) else {
             stateUpdateError = .EncodingError
             return (stateUpdated, stateUpdateError)
         }
@@ -887,7 +1007,7 @@ class Task {
             return (expressLink, expressLinkError)
         }
 
-        var request = URLRequest(url: URL(string: "https://www.off---white.com/en/GB/checkout/payment/paypal_redirect")!)
+        var request = URLRequest(url: URL(string: "https://www.off---white.com/en/\(self.userCountry)/checkout/payment/paypal_redirect")!)
         request.httpMethod = "POST"
         request.setValue(QHTTPFormURLEncoded.contentType, forHTTPHeaderField: "Content-Type")
         
@@ -939,173 +1059,290 @@ class Task {
     }
     
     public func setupAPITask() -> (TaskErrorState?) {
-        if !self.isLoggedIn {
-            let (loggedIn, loginError) = self.login()
+        if !self.setupComplete {
+            self.logger.info(message: "Starting")
+            _ = self.getCartObject()
             
-            if !loggedIn {
-                if let error = loginError {
-                    switch error {
-                    case .TaskBanned:
-                        self.rotateProxy()
-                        
-                        if self.taskSetupAttempts < MaxSetupAttempts {
-                            self.taskSetupAttempts += 1
-                            return self.setupAPITask()
-                        }
+            if !self.isLoggedIn {
+                let (loggedIn, loginError) = self.login()
+                
+                if !loggedIn {
+                    if let error = loginError {
+                        switch error {
+                        case .TaskBanned:
+                            if let proxy = self.proxyObj {
+                                ProxyStates[proxy.description] = ProxyState.Banned
+                            }
                             
-                        return TaskErrorState(error: .TaskBanned, state: .AttemptingLogin)
-                    default:
-                        return TaskErrorState(error: error, state: .AttemptingLogin)
+                            self.rotateProxy()
+                            
+                            if self.taskSetupAttempts < MaxSetupAttempts {
+                                self.taskSetupAttempts += 1
+                                return self.setupAPITask()
+                            }
+                                
+                            return TaskErrorState(error: .TaskBanned, state: .AttemptingLogin)
+                        default:
+                            return TaskErrorState(error: error, state: .AttemptingLogin)
+                        }
+                    }
+                } else {
+                    self.logger.info(message: "Logged In")
+                    self.isLoggedIn = true
+                }
+                
+                if let billAddress = self.taskObj.billingAddress {
+                    let (countryISO, getCountryError) = self.getCountryISO(countryID: billAddress.countryID)
+                    if let userCountry = countryISO {
+                        self.logger.info(message: "Got Country - \(userCountry)")
+                        self.userCountry = userCountry
+                    } else if let error = getCountryError {
+                        switch error {
+                        case .TaskBanned:
+                            if let proxy = self.proxyObj {
+                                ProxyStates[proxy.description] = ProxyState.Banned
+                            }
+                            self.rotateProxy()
+
+                            if self.taskSetupAttempts < MaxSetupAttempts {
+                                self.taskSetupAttempts += 1
+                                return self.setupAPITask()
+                            }
+
+                            return TaskErrorState(error: .TaskBanned, state: .AttempingGetCountryISO)
+                        default:
+                            return TaskErrorState(error: error, state: .AttempingGetCountryISO)
+                        }
+                    }
+                } else {
+                    return TaskErrorState(error: .NoAddress, state: .AttemptingLogin)
+                }
+            }
+            
+            var cartNeedsClearing = false
+            
+            if self.taskObj.csrfToken == nil {
+                let (gotCSRF, csrfError) = self.getCSRF()
+                
+                if !gotCSRF || csrfError != nil {
+                    if let error = csrfError {
+                        switch error {
+                        case .TaskBanned:
+                            if let proxy = self.proxyObj {
+                                ProxyStates[proxy.description] = ProxyState.Banned
+                            }
+                            
+                            self.rotateProxy()
+                            
+                            if self.taskSetupAttempts < MaxSetupAttempts {
+                                self.taskSetupAttempts += 1
+                                return self.setupAPITask()
+                            }
+                            
+                            return TaskErrorState(error: .TaskBanned, state: .AttemptingGetCSRF)
+                        case .CartNotEmpty:
+                            cartNeedsClearing = true
+                        default:
+                            return TaskErrorState(error: error, state: .AttemptingGetCSRF)
+                        }
+                    }
+                } else {
+                    self.logger.info(message: "Cart Is Clear")
+                    self.clearedCart = true
+                }
+            }
+            if !self.clearedCart {
+                if cartNeedsClearing {
+                    let cartClearError = self.clearCart()
+                    
+                    if let error = cartClearError {
+                        switch error {
+                        case .TaskBanned:
+                            if let proxy = self.proxyObj {
+                                ProxyStates[proxy.description] = ProxyState.Banned
+                            }
+                
+                            self.rotateProxy()
+                            
+                            if self.taskSetupAttempts < MaxSetupAttempts {
+                                self.taskSetupAttempts += 1
+                                return self.setupAPITask()
+                            }
+                            return TaskErrorState(error: .TaskBanned, state: .AttemptingClearCart)
+                        default:
+                            return TaskErrorState(error: error, state: .AttemptingClearCart)
+                        }
+                    } else {
+                        self.logger.info(message: "Cart Cleared")
+                        self.clearedCart = true
                     }
                 }
-            } else {
-                self.isLoggedIn = true
             }
-        }
-        
-        var cartNeedsClearing = false
-        
-        if self.taskObj.csrfToken == nil {
-            let (gotCSRF, csrfError) = self.getCSRF()
             
-            if !gotCSRF || csrfError != nil {
-                if let error = csrfError {
-                    switch error {
-                    case .TaskBanned:
-                        if let proxy = self.proxyObj {
-                            ProxyStates[proxy.description] = ProxyState.Banned
-                        }
-                        
-                        self.rotateProxy()
-                        
-                        if self.taskSetupAttempts < MaxSetupAttempts {
-                            self.taskSetupAttempts += 1
-                            return self.setupAPITask()
-                        }
-                        
-                        return TaskErrorState(error: .TaskBanned, state: .AttemptingGetCSRF)
-                    case .CartNotEmpty:
-                        cartNeedsClearing = true
-                    default:
-                        return TaskErrorState(error: error, state: .AttemptingGetCSRF)
+            let (checkoutObj, checkoutObjError) = self.getInitialCheckoutObj()
+            
+            if let checkoutObject = checkoutObj {
+                if checkoutObject.state == CheckoutState.Cart {
+                    self.logger.info(message: "Got Checkout Object - \(checkoutObject.id)")
+                    self.taskObj.checkoutObject = checkoutObject
+                } else {
+                    let (updatedState, stateUpdateError) = self.updateCheckoutState(orderNumber: checkoutObject.number, orderState: CheckoutState.Cart)
+                    if !updatedState {
+                        self.logger.warn(message: "Ignoring Found Cart Object - \(stateUpdateError!) - \(checkoutObject.id)")
+                    } else {
+                        self.logger.info(message: "Got Checkout Object - \(checkoutObject.id)")
+                        self.taskObj.checkoutObject = checkoutObject
                     }
                 }
-            } else {
-                self.taskObj.clearedCart = true
             }
-        }
-        
-        if cartNeedsClearing {
-            let cartClearError = self.clearCart()
             
-            if let error = cartClearError {
+            if let error = checkoutObjError {
                 switch error {
+                case .NoOrderObject:
+                    _ = self.addToCart(variantID: 1)
+                    if self.taskSetupAttempts < MaxSetupAttempts {
+                        self.taskSetupAttempts += 1
+                        return self.setupAPITask()
+                    }
                 case .TaskBanned:
                     if let proxy = self.proxyObj {
                         ProxyStates[proxy.description] = ProxyState.Banned
                     }
-        
+                    
                     self.rotateProxy()
                     
                     if self.taskSetupAttempts < MaxSetupAttempts {
                         self.taskSetupAttempts += 1
                         return self.setupAPITask()
                     }
-                    return TaskErrorState(error: .TaskBanned, state: .AttemptingClearCart)
+                    return TaskErrorState(error: .TaskBanned, state: .AttemptingObtainingCheckout)
                 default:
-                    return TaskErrorState(error: error, state: .AttemptingClearCart)
-                }
-            } else {
-                self.taskObj.clearedCart = true
-            }
-        }
-        
-        let (checkoutObj, checkoutObjError) = self.getInitialCheckoutObj()
-        
-        if let checkoutObject = checkoutObj {
-            if checkoutObject.state == CheckoutState.Cart {
-                self.taskObj.checkoutObject = checkoutObject
-            } else {
-                let (updatedState, stateUpdateError) = self.updateCheckoutState(orderNumber: checkoutObject.number, orderState: CheckoutState.Cart)
-                if !updatedState {
-                    self.logger.warn(message: "Ignoring Found Cart Object - \(stateUpdateError!) - \(checkoutObject.id)")
-                } else {
-                    self.taskObj.checkoutObject = checkoutObject
+                    return TaskErrorState(error: error, state: .AttemptingObtainingCheckout)
                 }
             }
+            
+            self.setupComplete = true
+            self.logger.info(message: "Setup Complete")
+            return nil
         }
-        
-        if let error = checkoutObjError {
-            switch error {
-            case .NoOrderObject:
-                _ = self.addToCart(variantID: 1)
-                if self.taskSetupAttempts < MaxSetupAttempts {
-                    self.taskSetupAttempts += 1
-                    return self.setupAPITask()
-                }
-            case .TaskBanned:
-                if let proxy = self.proxyObj {
-                    ProxyStates[proxy.description] = ProxyState.Banned
-                }
-    
-                self.rotateProxy()
-                
-                if self.taskSetupAttempts < MaxSetupAttempts {
-                    self.taskSetupAttempts += 1
-                    return self.setupAPITask()
-                }
-                return TaskErrorState(error: .TaskBanned, state: .AttemptingObtainingCheckout)
-            default:
-                return TaskErrorState(error: error, state: .AttemptingObtainingCheckout)
-            }
-        }
-        
         return nil
     }
-}
-
-
-
-func testFunc() {
-    let task = Task(taskObj: TaskObj(taskMode: TaskMode.API, taskType: TaskType.Product, accountEmail: "hasan@loserspay.tax", accountPassword: "TrelloUnique12"))
-   
-    let setupTime = NSDate()
     
-    if let error = task.setupAPITask() {
-        print(error)
-        return
+    public func startAPITask() {
+        _ = self.getCartObject()
+        if setupComplete {
+            switch self.taskObj.taskType {
+            case .Variant:
+                var addToCartResponse: ATCResponse?
+                var cartingError: TaskError?
+                while addToCartResponse == nil {
+                    if self.stopCalled {
+                        self.stopCalled = false
+                        return
+                    }
+                    if let variant = self.variantArray.randomElement() {
+                        (addToCartResponse, cartingError) = self.addToCart(variantID: variant)
+                        if let error = cartingError {
+                            switch error {
+                            case .TaskBanned:
+                                if let proxy = self.proxyObj {
+                                    ProxyStates[proxy.description] = ProxyState.Banned
+                                }
+                                
+                                self.rotateProxy()
+                            default:
+                                usleep(10 * 1000)
+                                self.logger.warn(message: "Carting Error - \(variant) - \(error)")
+                            }
+                            usleep(UInt32(RetryDelay) * 1000)
+                        }
+                        cartingError = nil
+                    }
+                }
+                
+                if let cartResponse = addToCartResponse {
+                    self.logger.info(message: "Carted - \(cartResponse.lineItem.variantID)")
+                    if let checkoutObject = self.taskObj.checkoutObject {
+                        if checkoutObject.id == cartResponse.lineItem.orderID {
+                            var (advancedCheckoutObject, advancingError) = self.advanceOrder(orderNumber: checkoutObject.number)
+                            var advanceAttempts = 0
+                            while advancedCheckoutObject == nil && advanceAttempts < 10 {
+                                if let error = advancingError {
+                                    advanceAttempts += 1
+                                    
+                                    switch error {
+                                    case .TaskBanned:
+                                        if let proxy = self.proxyObj {
+                                            ProxyStates[proxy.description] = ProxyState.Banned
+                                        }
+
+                                        self.rotateProxy()
+                                    default:
+                                        self.logger.warn(message: "Advancing Error - \(error)")
+                                        return
+                                    }
+                                    
+                                    usleep(UInt32(RetryDelay) * 1000)
+                                    (advancedCheckoutObject, advancingError) = self.advanceOrder(orderNumber: checkoutObject.number)
+                                }
+                            }
+                            
+                            if let finalOrderObject = advancedCheckoutObject, finalOrderObject.state == CheckoutState.Payment {
+                                var (redirectLink, linkError) = self.getPayPalExpressLink(checkoutObj: finalOrderObject)
+                                var linkAttempts = 0
+                                while redirectLink == nil && linkAttempts < MaxLinkAttempts {
+                                    
+                                    if let error = linkError {
+                                        linkAttempts += 1
+    
+                                        switch error {
+                                        case .TaskBanned:
+                                            if let proxy = self.proxyObj {
+                                                ProxyStates[proxy.description] = ProxyState.Banned
+                                            }
+    
+                                            self.rotateProxy()
+                                        default:
+                                            self.logger.warn(message: "Obtain Link Error - \(error)")
+                                            return
+                                        }
+                                        usleep(UInt32(RetryDelay) * 1000)
+                                        (redirectLink, linkError) = self.getPayPalExpressLink(checkoutObj: checkoutObject)
+                                    }
+                                }
+    
+                                if let obtainedRedirectLink = redirectLink {
+                                    self.sendPayPalWH(redirectLink: obtainedRedirectLink, cartResponse: cartResponse.cart)
+                                    self.logger.info(message: "Obtained PayPal Link - \(obtainedRedirectLink)")
+                                }
+                            }
+                        } else {
+                            
+                        }
+                        
+                    }
+                }
+            case .Product:
+                self.logger.warn(message: "Product Mode Not Implemented")
+            }
+        }
     }
     
-    let setupFinish = NSDate()
-    let setupExecutionTime = setupFinish.timeIntervalSince(setupTime as Date)
-    print("Setup Time: \(setupExecutionTime)")
-
-    
-    let methodStart = NSDate()
-    let (cartItemObj, cartingError) = task.addToCart(variantID: 118563)
-
-    guard let cart = cartItemObj else {
-        print(cartingError!)
-        return
-    }
-
-
-    if let checkoutObj = task.taskObj.checkoutObject, cart.lineItem.orderID == checkoutObj.id {
-        let (checkoutObj, error) = task.advanceOrder(orderNumber: checkoutObj.number)
-        guard let checkoutObject = checkoutObj else {
-            print(error!)
-            return
+    public func sendPayPalWH(redirectLink: String, cartResponse: Cart) {
+        var sessionCookie: String?
+        if let cookieArray = self.session.session.configuration.httpCookieStorage?.cookies {
+            for (cookie) in cookieArray {
+                if cookie.name == "_hs_session_v5" {
+                    sessionCookie = cookie.value
+                }
+            }
         }
         
-        if checkoutObject.state == CheckoutState.Payment {
-            print(task.getPayPalExpressLink(checkoutObj: checkoutObject))
-        }
+        let attachment = Attachment(fallback: redirectLink, color: "#75787B", text: "```\(sessionCookie ?? "N/A")```", title: "GREY | PayPal Checkout", titleLink: redirectLink, fields: [WebhookField(title: "Email", value: self.taskObj.accountEmail), WebhookField(title: "Variant", value:"\( cartResponse.lineItems[0].variantID)"), WebhookField(title: "Item", value: "<https://www.off---white.com/\(cartResponse.lineItems[0].url)|\(cartResponse.lineItems[0].name)>")], thumbURL: cartResponse.lineItems[0].imageURL)
         
-        let methodFinish = NSDate()
-        let executionTime = methodFinish.timeIntervalSince(methodStart as Date)
-        print("API Reservation Time: \(executionTime)")
-    } else {
-        print(cart.lineItem.orderID)
-        print(task.taskObj.checkoutObject!)
+       
+        concurrentWHQueue.async {
+            GlobalWH.send(webhook: SlackWebhook(attachments: [attachment]), logger: self.logger)
+        }
     }
 }
