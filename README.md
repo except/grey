@@ -6,7 +6,7 @@ a project by @afraidlabs
 
 Preface, I suck at Swift so it might not be the best solution, and some of the stuff I quote might be wrong.
 - Variti 
-- - Swift provides the correct TLS fingerprint for Safari on iOS & macOS as long as you set a proper User-Agent
+- - Swift provides the correct TLS fingerprint & Header Order for Safari on iOS & macOS as long as you set a proper User-Agent
 - Task Handling
 - - WS API (Incomplete) makes managing tasks simple however there is a limit of 64 tasks due to how DispatchQueue's work.
 - Speed
