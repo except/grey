@@ -47,7 +47,7 @@ class Proxy: CustomStringConvertible {
             if (sessionConfiguration!.httpAdditionalHeaders) != nil {
                 sessionConfiguration!.httpAdditionalHeaders!["Proxy-Authorization"] = authorisation!
             } else {
-                sessionConfiguration!.httpAdditionalHeaders = ["User-Agent": UserAgent, "Proxy-Authorization": self.authorisation!]
+                sessionConfiguration!.httpAdditionalHeaders = ["User-Agent": UserAgent, "Proxy-Authorization": "Bearer \(self.authorisation!)"]
             }
         }
         
